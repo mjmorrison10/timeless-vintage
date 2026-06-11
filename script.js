@@ -1,429 +1,133 @@
-// Timeless Vintage - Interactive Scripts
+/* ================================================
+   TIMELESS VINTAGE — JavaScript
+   ================================================ */
 
-// ============================================
-// Mobile Navigation Toggle
-// ============================================
-const mobileToggle = document.getElementById('mobileToggle');
-const navLinks = document.getElementById('navLinks');
-
-mobileToggle.addEventListener('click', () => {
-    navLinks.classList.toggle('active');
-    mobileToggle.classList.toggle('active');
-});
-
-navLinks.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => {
-        navLinks.classList.remove('active');
-        mobileToggle.classList.remove('active');
+document.addEventListener('DOMContentLoaded', () => {
+    // ==================== SCROLL PROGRESS ====================
+    const scrollProgress = document.getElementById('scrollProgress');
+    window.addEventListener('scroll', () => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = (scrollTop / docHeight) * 100;
+        scrollProgress.style.width = progress + '%';
     });
-});
 
-// ============================================
-// Navbar scroll effect
-// ============================================
-const navbar = document.getElementById('navbar');
-window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-        navbar.classList.add('scrolled');
-    } else {
-        navbar.classList.remove('scrolled');
-    }
-});
+    // ==================== NAVBAR SCROLL ====================
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        navbar.classList.toggle('scrolled', window.scrollY > 50);
+    });
 
-// ============================================
-// Smooth scroll for anchor links
-// ============================================
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // ==================== MOBILE MENU ====================
+    const mobileToggle = document.getElementById('mobileToggle');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    mobileToggle.addEventListener('click', () => {
+        mobileToggle.classList.toggle('active');
+        mobileMenu.classList.toggle('active');
+    });
+
+    document.querySelectorAll('.mobile-menu a').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileToggle.classList.remove('active');
+            mobileMenu.classList.remove('active');
+        });
+    });
+
+    // ==================== OPEN/CLOSED STATUS ====================
+    function updateStatus() {
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const now = new Date();
+        const day = now.getDay(); // 0=Sun, 1=Mon
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+        const time = hour + minute / 60;
+
+        let isOpen = false;
+        if (day === 1) { // Monday - Closed
+            isOpen = false;
+        } else if (day === 0) { // Sunday
+            isOpen = time >= 12 && time < 17;
+        } else { // Tue-Sat
+            isOpen = time >= 11 && time < 18;
         }
-    });
-});
 
-// ============================================
-// Scroll Progress Bar
-// ============================================
-const scrollProgress = document.getElementById('scrollProgress');
-
-function updateScrollProgress() {
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-    const scrollPercent = (scrollTop / docHeight) * 100;
-    scrollProgress.style.width = scrollPercent + '%';
-}
-
-window.addEventListener('scroll', updateScrollProgress);
-
-// ============================================
-// Back to Top Button
-// ============================================
-const backToTop = document.getElementById('backToTop');
-
-function toggleBackToTop() {
-    if (window.scrollY > 400) {
-        backToTop.classList.add('visible');
-    } else {
-        backToTop.classList.remove('visible');
-    }
-}
-
-backToTop.addEventListener('click', () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-
-window.addEventListener('scroll', toggleBackToTop);
-
-// ============================================
-// Animated Counter (IntersectionObserver)
-// ============================================
-function animateCounter(element, target, duration) {
-    const start = 0;
-    const startTime = performance.now();
-
-    function update(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeProgress = 1 - Math.pow(1 - progress, 3);
-        const current = Math.floor(easeProgress * target);
-
-        if (target >= 1000) {
-            element.textContent = current.toLocaleString() + '+';
+        if (isOpen) {
+            statusDot.classList.add('open');
+            statusDot.classList.remove('closed');
+            statusText.textContent = 'Open Now';
         } else {
-            element.textContent = current + '+';
-        }
-
-        if (progress < 1) {
-            requestAnimationFrame(update);
+            statusDot.classList.add('closed');
+            statusDot.classList.remove('open');
+            statusText.textContent = 'Closed';
         }
     }
+    updateStatus();
+    setInterval(updateStatus, 60000);
 
-    requestAnimationFrame(update);
-}
+    // ==================== SCROLL REVEAL ====================
+    const reveals = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
-function fadeInElement(element) {
-    element.style.opacity = '0';
-    element.style.transform = 'scale(0.5)';
-    element.style.transition = 'all 0.6s ease';
-    requestAnimationFrame(() => {
-        element.style.opacity = '1';
-        element.style.transform = 'scale(1)';
+    reveals.forEach(el => revealObserver.observe(el));
+
+    // ==================== BACK TO TOP ====================
+    const backToTop = document.getElementById('backToTop');
+    window.addEventListener('scroll', () => {
+        backToTop.classList.toggle('visible', window.scrollY > 500);
     });
-}
+    backToTop.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 
-const statsObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const el = entry.target;
-            const count = el.getAttribute('data-count');
-            const suffix = el.getAttribute('data-suffix');
+    // ==================== FORM VALIDATION ====================
+    const contactForm = document.getElementById('contactForm');
+    const formSuccess = document.getElementById('formSuccess');
 
-            if (suffix) {
-                fadeInElement(el);
-            } else if (count !== null) {
-                const target = parseInt(count, 10);
-                if (!isNaN(target) && target > 0) {
-                    el.classList.add('counting');
-                    animateCounter(el, target, 2000);
-                } else {
-                    fadeInElement(el);
-                }
+    if (contactForm) {
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            let valid = true;
+
+            const nameInput = document.getElementById('name');
+            if (!nameInput.value.trim()) {
+                nameInput.classList.add('error');
+                valid = false;
+            } else {
+                nameInput.classList.remove('error');
             }
 
-            statsObserver.unobserve(el);
-        }
-    });
-}, { threshold: 0.5 });
+            const emailInput = document.getElementById('email');
+            if (emailInput.value && !emailInput.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                emailInput.classList.add('error');
+                valid = false;
+            } else {
+                emailInput.classList.remove('error');
+            }
 
-document.querySelectorAll('.stats-number[data-count]').forEach(el => {
-    statsObserver.observe(el);
-});
-
-// ============================================
-// Scroll Animation Observer (staggered)
-// ============================================
-const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-            const parent = entry.target.parentElement;
-            const siblings = Array.from(parent.children).filter(child =>
-                child.classList.contains('service-card') ||
-                child.classList.contains('review-card') ||
-                child.classList.contains('why-feature') ||
-                child.classList.contains('detail-card')
-            );
-            const siblingIndex = siblings.indexOf(entry.target);
-            const delay = siblingIndex >= 0 ? siblingIndex * 0.1 : 0;
-
-            entry.target.style.animationDelay = delay + 's';
-            entry.target.classList.add('animate-in');
-            observer.unobserve(entry.target);
-        }
-    });
-}, observerOptions);
-
-document.querySelectorAll('.service-card, .review-card, .why-feature, .detail-card').forEach(el => {
-    el.style.opacity = '0';
-    observer.observe(el);
-});
-
-// ============================================
-// Parallax Hero Effect
-// ============================================
-const heroContent = document.querySelector('.hero-content');
-
-function parallaxHero() {
-    const scrolled = window.pageYOffset;
-    const heroHeight = document.querySelector('.hero').offsetHeight;
-
-    if (scrolled < heroHeight) {
-        const translateY = scrolled * 0.3;
-        heroContent.style.transform = `translateY(${translateY}px)`;
-    }
-}
-
-window.addEventListener('scroll', parallaxHero);
-
-// ============================================
-// Hero Particles
-// ============================================
-function createParticles() {
-    const container = document.getElementById('heroParticles');
-    if (!container) return;
-
-    for (let i = 0; i < 20; i++) {
-        const particle = document.createElement('div');
-        particle.classList.add('hero-particle');
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.top = Math.random() * 100 + '%';
-        particle.style.animationDelay = Math.random() * 4 + 's';
-        particle.style.animationDuration = (3 + Math.random() * 3) + 's';
-        particle.style.width = (4 + Math.random() * 6) + 'px';
-        particle.style.height = particle.style.width;
-        container.appendChild(particle);
-    }
-}
-
-createParticles();
-
-// ============================================
-// Testimonial Auto-Scroll on Mobile
-// ============================================
-let autoScrollInterval = null;
-
-function startAutoScroll() {
-    const reviewsGrid = document.getElementById('reviewsGrid');
-    if (!reviewsGrid || window.innerWidth >= 768) return;
-
-    let scrollDirection = 1;
-    autoScrollInterval = setInterval(() => {
-        const maxScroll = reviewsGrid.scrollWidth - reviewsGrid.clientWidth;
-        if (reviewsGrid.scrollLeft >= maxScroll - 2) {
-            scrollDirection = -1;
-        } else if (reviewsGrid.scrollLeft <= 2) {
-            scrollDirection = 1;
-        }
-        reviewsGrid.scrollLeft += scrollDirection * 1;
-    }, 30);
-}
-
-function stopAutoScroll() {
-    if (autoScrollInterval) {
-        clearInterval(autoScrollInterval);
-        autoScrollInterval = null;
-    }
-}
-
-function checkAutoScroll() {
-    if (window.innerWidth < 768) {
-        if (!autoScrollInterval) startAutoScroll();
-    } else {
-        stopAutoScroll();
-    }
-}
-
-const reviewsGrid = document.getElementById('reviewsGrid');
-if (reviewsGrid) {
-    reviewsGrid.addEventListener('touchstart', stopAutoScroll);
-    reviewsGrid.addEventListener('touchend', () => {
-        setTimeout(() => {
-            if (window.innerWidth < 768) startAutoScroll();
-        }, 3000);
-    });
-}
-
-window.addEventListener('resize', checkAutoScroll);
-checkAutoScroll();
-
-// ============================================
-// Form Validation (real-time)
-// ============================================
-const contactForm = document.getElementById('contactForm');
-const formFields = contactForm.querySelectorAll('input, select, textarea');
-
-formFields.forEach(field => {
-    field.addEventListener('input', function() {
-        const formGroup = this.closest('.form-group');
-        if (this.value.trim().length > 0) {
-            formGroup.classList.add('valid');
-        } else {
-            formGroup.classList.remove('valid');
-        }
-    });
-
-    field.addEventListener('blur', function() {
-        const formGroup = this.closest('.form-group');
-        if (this.hasAttribute('required') && this.value.trim().length === 0) {
-            formGroup.classList.remove('valid');
-        }
-    });
-});
-
-// Form submission handler
-contactForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData.entries());
-
-    const subject = encodeURIComponent('Visit Request - Timeless Vintage');
-    const body = encodeURIComponent(
-        `Name: ${data.name}\n` +
-        `Phone: ${data.phone || 'N/A'}\n` +
-        `Email: ${data.email || 'N/A'}\n` +
-        `Looking For: ${data.lookingfor || 'N/A'}\n` +
-        `Preferred Visit Date: ${data.visitdate || 'N/A'}\n\n` +
-        `Please contact me to confirm my visit.`
-    );
-
-    window.location.href = `mailto:info@timelessvintage.com?subject=${subject}&body=${body}`;
-
-    const btn = this.querySelector('button[type="submit"]');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '&#10003; Request Sent!';
-    btn.style.background = '#10b981';
-    btn.style.borderColor = '#10b981';
-
-    setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.style.background = '';
-        btn.style.borderColor = '';
-        this.reset();
-        formFields.forEach(field => {
-            field.closest('.form-group').classList.remove('valid');
+            if (valid) {
+                contactForm.style.display = 'none';
+                formSuccess.style.display = 'block';
+            }
         });
-    }, 3000);
-});
+    }
 
-// ============================================
-// CTA Button Pulse
-// ============================================
-setTimeout(() => {
-    document.querySelectorAll('.hero-ctas .btn').forEach(btn => {
-        btn.classList.add('btn-pulse');
+    // ==================== SMOOTH SCROLL ====================
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
     });
-}, 3000);
-
-// ============================================
-// Smooth Nav Active State
-// ============================================
-const sections = document.querySelectorAll('section[id]');
-const navLinksList = document.querySelectorAll('.nav-links a[data-section]');
-
-function updateActiveNav() {
-    const scrollPos = window.scrollY + 120;
-
-    sections.forEach(section => {
-        const sectionTop = section.offsetTop;
-        const sectionHeight = section.offsetHeight;
-        const sectionId = section.getAttribute('id');
-
-        if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
-            navLinksList.forEach(link => {
-                link.classList.remove('active-section');
-                if (link.getAttribute('data-section') === sectionId) {
-                    link.classList.add('active-section');
-                }
-            });
-        }
-    });
-}
-
-window.addEventListener('scroll', updateActiveNav);
-updateActiveNav();
-
-// ============================================
-// Click-to-call tracking
-// ============================================
-document.querySelectorAll('a[href^="tel:"]').forEach(link => {
-    link.addEventListener('click', () => {
-        if (typeof gtag === 'function') {
-            gtag('event', 'click_to_call', { business: 'Timeless Vintage' });
-        }
-    });
-});
-
-// ============================================
-// Initial animations on load
-// ============================================
-window.addEventListener('load', () => {
-    const heroBadge = document.querySelector('.hero-badge');
-    if (heroBadge) {
-        heroBadge.style.opacity = '0';
-        heroBadge.style.transform = 'translateY(20px)';
-        setTimeout(() => {
-            heroBadge.style.transition = 'all 0.6s ease';
-            heroBadge.style.opacity = '1';
-            heroBadge.style.transform = 'translateY(0)';
-        }, 200);
-    }
-
-    const heroH1 = document.querySelector('.hero h1');
-    if (heroH1) {
-        heroH1.style.opacity = '0';
-        heroH1.style.transform = 'translateY(20px)';
-        setTimeout(() => {
-            heroH1.style.transition = 'all 0.6s ease';
-            heroH1.style.opacity = '1';
-            heroH1.style.transform = 'translateY(0)';
-        }, 400);
-    }
-
-    const heroSub = document.querySelector('.hero-sub');
-    if (heroSub) {
-        heroSub.style.opacity = '0';
-        heroSub.style.transform = 'translateY(20px)';
-        setTimeout(() => {
-            heroSub.style.transition = 'all 0.6s ease';
-            heroSub.style.opacity = '1';
-            heroSub.style.transform = 'translateY(0)';
-        }, 600);
-    }
-
-    const heroCtas = document.querySelector('.hero-ctas');
-    if (heroCtas) {
-        heroCtas.style.opacity = '0';
-        heroCtas.style.transform = 'translateY(20px)';
-        setTimeout(() => {
-            heroCtas.style.transition = 'all 0.6s ease';
-            heroCtas.style.opacity = '1';
-            heroCtas.style.transform = 'translateY(0)';
-        }, 800);
-    }
-
-    const heroTrust = document.querySelector('.hero-trust');
-    if (heroTrust) {
-        heroTrust.style.opacity = '0';
-        heroTrust.style.transform = 'translateY(20px)';
-        setTimeout(() => {
-            heroTrust.style.transition = 'all 0.6s ease';
-            heroTrust.style.opacity = '1';
-            heroTrust.style.transform = 'translateY(0)';
-        }, 1000);
-    }
-
-    updateScrollProgress();
 });
